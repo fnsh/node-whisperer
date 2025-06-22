@@ -25,7 +25,7 @@ CFLAGS_json:=$(shell pkg-config --cflags json-c)
 LDFLAGS_json:=$(shell pkg-config --libs json-c)
 
 
-LDFLAGS_DAEMON:=-lubox -lubus -lblobmsg_json -lgluonutil -luci $(LDFLAGS_nl) $(LDFLAGS_batadv) $(LDFLAGS_json)
+LDFLAGS_DAEMON:=-lubox -lubus -lblobmsg_json -lgluonutil -luci -lm $(LDFLAGS_nl) $(LDFLAGS_batadv) $(LDFLAGS_json)
 CFLAGS_DAEMON:=$(CFLAGS_nl) $(CFLAGS_batadv) $(CFLAGS_json)
 
 LDFLAGS_MONITOR:=$(LDFLAGS_genl)
