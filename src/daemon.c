@@ -46,9 +46,9 @@ static int nw_daemon_create_vendor_element_buf(struct nw *instance) {
 	instance->output.buf[5] = 0x04;
 
 	/* Length now matches content. Make sure to update on each new information! */
-	
+
 	/* Loop through all information-sources */
-	for (int i = 0; information_sources[i].name; i++) {		
+	for (int i = 0; information_sources[i].name; i++) {
 		if (!information_sources[i].enabled) {
 			log_debug("Information source id=%d name=%s is disabled",
 				  information_sources[i].type, information_sources[i].name);
@@ -121,11 +121,11 @@ static void nw_daemon_collect_information(struct uloop_timeout *timeout) {
 	if (nw_daemon_create_vendor_element_buf(instance) < 0) {
 		goto out_free;
 	}
-	
+
 	/* Allocate output buffer */
 	size_t buf_len = instance->output.len * 2 + 1;
 	uint8_t *buf_hex = malloc(buf_len);
-	
+
 	nw_buffer_to_hexstring(instance->output.buf, instance->output.len, buf_hex);
 
 	/* Update nodes */
@@ -141,7 +141,7 @@ out_free:
 
 static int start_daemon() {
 	struct nw instance = {};
-	
+
 	INIT_LIST_HEAD(&instance.enabled_interfaces);
 
 	uloop_init();

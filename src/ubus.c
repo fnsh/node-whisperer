@@ -48,13 +48,13 @@ static int nw_ubus_set_interfaces(struct ubus_context *ctx, struct ubus_object *
 		ifname = blobmsg_get_string(cur);
 		if (!ifname)
 			return UBUS_STATUS_INVALID_ARGUMENT;
-		
+
 		log_debug("Add interface %s\n", ifname);
 
 		iface = calloc(1, sizeof(*iface));
 		if (!iface)
 			return UBUS_STATUS_UNKNOWN_ERROR;
-		
+
 		iface->name = strdup(ifname);
 		if (!iface->name) {
 			free(iface);
