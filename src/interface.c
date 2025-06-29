@@ -103,6 +103,7 @@ int nw_interface_remove(struct ubus_context *ctx,
 int nw_interface_add(struct ubus_context *ctx, int id, const char *name)
 {
 	struct nw_interface *iface;
+	int ret;
 
 	iface = calloc(1, sizeof(*iface));
 	if (!iface) {
@@ -125,8 +126,13 @@ int nw_interface_add(struct ubus_context *ctx, int id, const char *name)
 	/* Subscribe to node removal */
 	iface->ubus.subscriber.cb = nw_interface_handle_event;
 	iface->ubus.subscriber.remove_cb = nw_interface_handle_remove;
-	ubus_register_subscriber(ctx, &iface->ubus.subscriber);
-	ubus_subscribe(ctx, &iface->ubus.subscriber, iface->ubus.id);
+	ret = ubus_register_subscriber(ctx, &iface->ubus.subscriber);
+	if (ret)
+		log_error("Failed to register subscriber for %s: %s", name, ubus_strerror(ret));
+
+	ret = ubus_subscribe(ctx, &iface->ubus.subscriber, iface->ubus.id);
+	if (ret)
+		log_error("Failed to subscribe to %s: %s", name, ubus_strerror(ret));
 
 	log_info("Registered interface %s", iface->ubus.name);
 
