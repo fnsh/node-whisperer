@@ -25,8 +25,8 @@ CFLAGS_json:=$(shell pkg-config --cflags json-c)
 LDFLAGS_json:=$(shell pkg-config --libs json-c)
 
 
-LDFLAGS:=-lubox -lubus -lblobmsg_json -lgluonutil -luci $(LDFLAGS_nl) $(LDFLAGS_batadv) $(LDFLAGS_json)
-CFLAGS:=$(CFLAGS_nl) $(CFLAGS_batadv) $(CFLAGS_json)
+LDFLAGS_DAEMON:=-lubox -lubus -lblobmsg_json -lgluonutil -luci $(LDFLAGS_nl) $(LDFLAGS_batadv) $(LDFLAGS_json)
+CFLAGS_DAEMON:=$(CFLAGS_nl) $(CFLAGS_batadv) $(CFLAGS_json)
 
 LDFLAGS_MONITOR:=$(LDFLAGS_genl) -DBUILD_MONITOR
 CFLAGS_MONITOR:=$(CFLAGS_genl)
@@ -34,7 +34,7 @@ CFLAGS_MONITOR:=$(CFLAGS_genl)
 all: node-whisperer node-monitor
 
 node-whisperer:
-	$(CC) $(CFLAGS_common) $(CFLAGS) -D_GNU_SOURCE -o node-whisperer daemon.c util.c information.c log.c ubus.c interface.c batadv.c $(LDFLAGS_common) $(LDFLAGS)
+	$(CC) $(CFLAGS_common) $(CFLAGS_DAEMON) $(CFLAGS) -D_GNU_SOURCE -o node-whisperer daemon.c util.c information.c log.c ubus.c interface.c batadv.c $(LDFLAGS_common) $(LDFLAGS) $(LDFLAGS_DAEMON)
 
 node-monitor:
-	$(CC) $(CFLAGS_common) $(CFLAGS_MONITOR) -D_GNU_SOURCE -o node-monitor monitor.c log.c util.c ieee80211.c information.c $(LDFLAGS_common) $(LDFLAGS_MONITOR)
+	$(CC) $(CFLAGS_common) $(CFLAGS_MONITOR) $(CFLAGS) -D_GNU_SOURCE -o node-monitor monitor.c log.c util.c ieee80211.c information.c $(LDFLAGS_common) $(LDFLAGS) $(LDFLAGS_MONITOR)
