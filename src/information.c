@@ -325,7 +325,7 @@ int node_whisperer_information_system_load_parse(const uint8_t *ie_buf, size_t i
 	if (ie_len < 1)
 		return -1;
 
-	load = (double)ie_buf[0] / 0.1;
+	load = (double)ie_buf[0] / 10.0;
 	printf("System load: %.1f\n", load);
 	return 0;
 }
