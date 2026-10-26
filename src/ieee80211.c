@@ -36,7 +36,7 @@ int ieee80211_information_elements_iterate(uint8_t *ie_buf, size_t ie_buf_len, i
 
 		if (cb) {
 			log_debug("Hand over to callback");
-			if (cb(ie, ie_remaining, data) != 0)
+			if (cb(ie, ie_len + 2, data) != 0)
 				return -1;
 		}
 
