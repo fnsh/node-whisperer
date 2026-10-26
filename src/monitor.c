@@ -283,7 +283,7 @@ int nl80211_trigger_scan(struct nl80211_sock *wifi, int ifindex)
 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, ifindex);
 
 
-	err = -ENOENT;
+	err = 1;
 	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, callback_trigger, &results);
 	nl_cb_err(cb, NL_CB_CUSTOM, error_handler, &err);
 	nl_cb_set(cb, NL_CB_FINISH, NL_CB_CUSTOM, finish_handler, &err);
