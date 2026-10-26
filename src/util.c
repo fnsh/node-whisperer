@@ -17,7 +17,11 @@ int nw_read_file(char *path, char **buf, size_t *len) {
 		fclose(f);
 		return -1;
 	}
-	fread(*buf, 1, *len, f);
+	if (fread(*buf, 1, *len, f) != *len) {
+		free(*buf);
+		fclose(f);
+		return -1;
+	}
 	fclose(f);
 	return 0;
 }
