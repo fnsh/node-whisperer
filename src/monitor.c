@@ -187,7 +187,7 @@ int nl_get_multicast_id(struct nl80211_sock *sock, const char *family, const cha
 {
 	struct handler_args grp = { .group = group, .id = -ENOENT, };
 	struct nl_msg *msg;
-	struct nl_cb *cb;
+	struct nl_cb *cb = NULL;
 	int ret;
 
 	msg = nlmsg_alloc();
@@ -237,8 +237,8 @@ nla_put_failure:
 int nl80211_trigger_scan(struct nl80211_sock *wifi, int ifindex)
 {
 	struct trigger_results results = {};
-	struct nl_msg *msg, *scan_ssid;
-	struct nl_cb *cb;
+	struct nl_msg *msg = NULL, *scan_ssid = NULL;
+	struct nl_cb *cb = NULL;
 	int ret, err, mcid;
 	mcid = nl_get_multicast_id(wifi, "nl80211", "scan");
 	if (mcid < 0) {
