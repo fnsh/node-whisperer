@@ -55,9 +55,9 @@ int nw_format_mac_address_string(const uint8_t *mac_address, char *mac_address_s
 	return 0;
 }
 
-int nw_buffer_to_hexstring(const uint8_t *buf, size_t len, uint8_t *hexstring) {
+int nw_buffer_to_hexstring(const uint8_t *buf, size_t len, char *hexstring) {
 	for (size_t i = 0; i < len; i++) {
-		sprintf((char *)&hexstring[i * 2], "%02x", buf[i]);
+		sprintf(&hexstring[i * 2], "%02x", buf[i]);
 	}
 	return 0;
 }
