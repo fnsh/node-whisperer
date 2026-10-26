@@ -456,7 +456,7 @@ static int monitor_gluon_node_add(const uint8_t *bssid,
 	ret = ieee80211_information_elements_iterate(information_elements, information_elements_len, monitor_gluon_node_parse_ie, node);
 	if (ret) {
 		log_error("Failed to parse information elements. ret=%d", ret);
-		return ret;
+		goto out_free;
 	}
 
 	/* Validate basic information */
