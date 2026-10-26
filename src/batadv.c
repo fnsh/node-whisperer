@@ -15,6 +15,7 @@
 #include <net/if.h>
 
 #include "batadv.h"
+#include "batadv-compat.h"
 #include "log.h"
 
 struct neigh_netlink_opts {
