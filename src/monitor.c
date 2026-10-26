@@ -393,7 +393,7 @@ static int monitor_gluon_node_parse_ie(const uint8_t *ie, size_t ie_len, void *d
 	node->information_elements = malloc(gluon_tlv_len);
 	if (!node->information_elements) {
 		log_error("Failed to allocate memory for gluon IE buffer.");
-		ret = -ENOMEM;
+		return -ENOMEM;
 	}
 	memcpy(node->information_elements, gluon_tlv, gluon_tlv_len);
 	node->information_elements_len = gluon_tlv_len;
