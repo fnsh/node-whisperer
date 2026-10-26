@@ -290,7 +290,11 @@ int nl80211_trigger_scan(struct nl80211_sock *wifi, int ifindex)
 	nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, ack_handler, &err);
 	nl_cb_set(cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, no_seq_check, NULL);
 
-	nl_send_auto_complete(wifi->nls, msg);
+	ret = nl_send_auto_complete(wifi->nls, msg);
+	if (ret < 0) {
+		log_debug("nl_send_auto_complete() returned %d (%s).", ret, nl_geterror(-ret));
+		goto nla_put_failure;
+	}
 
 	while (err > 0)
 		ret = nl_recvmsgs(wifi->nls, cb);
