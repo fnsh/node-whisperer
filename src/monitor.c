@@ -38,7 +38,7 @@ struct handler_args {
 
 struct gluon_node {
 	uint8_t node_id[6];
-	char *information_elements;
+	uint8_t *information_elements;
 	size_t information_elements_len;
 };
 
@@ -412,8 +412,8 @@ out_free:
 	return ret;
 }
 
-static int monitor_gluon_node_add(const char *bssid,
-				  const char *information_elements,
+static int monitor_gluon_node_add(const uint8_t *bssid,
+				  const uint8_t *information_elements,
 				  size_t information_elements_len)
 {
 	struct gluon_node *node;
