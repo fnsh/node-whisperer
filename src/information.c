@@ -88,13 +88,13 @@ int node_whisperer_information_batman_adv_collect(uint8_t *buffer, size_t buffer
 	ret = nw_get_batadv_neighbor_stats(&stats);
 	if (ret)
 		return -1;
-	
+
 	ret = nw_get_batadv_clients();
 	if (ret < 0) {
 		num_clients = 0;
 	} else {
 		num_clients = (uint16_t)ret;
-	}	
+	}
 
 	buffer[0] = stats.vpn.connected ? 1 : 0;
 	buffer[1] = stats.vpn.tq;
@@ -244,7 +244,7 @@ int node_whisperer_information_hostname_parse(const uint8_t *ie_buf, size_t ie_l
 	return 0;
 }
 
-int node_whisperer_information_node_id_parse(const uint8_t *ie_buf, size_t ie_len) {	
+int node_whisperer_information_node_id_parse(const uint8_t *ie_buf, size_t ie_len) {
 	/* We Print Node-ID on top */
 
 	return 0;
@@ -255,7 +255,7 @@ int node_whisperer_information_batman_adv_parse(const uint8_t *ie_buf, size_t ie
 
 	if (ie_len < 8)
 		return -1;
-	
+
 	printf("VPN connected: %s\n", ie_buf[0] ? "Yes" : "No");
 	printf("VPN-TQ: %d\n", ie_buf[1]);
 	tmp = (uint16_t *)&ie_buf[2];
@@ -309,7 +309,7 @@ int node_whisperer_information_domain_parse(const uint8_t *ie_buf, size_t ie_len
 	tmp = malloc(ie_len + 1);
 	if (!tmp)
 		return -1;
-	
+
 	memcpy(tmp, ie_buf, ie_len);
 	tmp[ie_len] = '\0';
 

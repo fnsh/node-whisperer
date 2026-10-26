@@ -69,7 +69,7 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 	if (batadv_genl_missing_attrs(attrs, parse_orig_list_mandatory,
 				      BATADV_ARRAY_SIZE(parse_orig_list_mandatory)))
 		return NL_OK;
-	
+
 	hardif = nla_get_u32(attrs[BATADV_ATTR_HARD_IFINDEX]);
 	orig = nla_data(attrs[BATADV_ATTR_ORIG_ADDRESS]);
 	dest = nla_data(attrs[BATADV_ATTR_NEIGH_ADDRESS]);
@@ -86,7 +86,6 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 		opts->stats->vpn.tq = nla_get_u8(attrs[BATADV_ATTR_TQ]);
 		opts->stats->vpn.connected = 1;
 	}
-
 	return NL_OK;
 }
 

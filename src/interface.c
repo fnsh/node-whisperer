@@ -77,7 +77,7 @@ int nw_interface_update(struct ubus_context *ctx, char *vendor_elements)
 			/* Delete element */
 			blob_buf_init(&b, 0);
 			blobmsg_add_string(&b, "vendor_elements", "");
-			
+
 			ret = ubus_invoke(ctx, iface->ubus.id, "set_vendor_elements", b.head, NULL, NULL, 1000);
 			if (ret) {
 				log_error("Failed to reset vendor elements for id=%d name=%s error=%s", iface->ubus.id, iface->ubus.name, ubus_strerror(ret));

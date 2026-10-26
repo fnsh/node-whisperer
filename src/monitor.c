@@ -196,7 +196,7 @@ int nl_get_multicast_id(struct nl80211_sock *sock, const char *family, const cha
 		ret = -ENOMEM;
 		goto nla_put_failure;
 	}
-		
+
 	cb = nl_cb_alloc(NL_CB_DEFAULT);
 	if (!cb) {
 		log_error("Failed to allocate callback message.");
@@ -224,7 +224,7 @@ int nl_get_multicast_id(struct nl80211_sock *sock, const char *family, const cha
 		nl_recvmsgs(sock->nls, cb);
 
 	if (ret == 0) {
-		ret = grp.id;	
+		ret = grp.id;
 	}
 	log_debug("Received multicast group ID: %d", ret);
 
@@ -281,8 +281,8 @@ int nl80211_trigger_scan(struct nl80211_sock *wifi, int ifindex)
 	genlmsg_put(msg, 0, 0, wifi->nl80211_id, 0, 0, NL80211_CMD_TRIGGER_SCAN, 0);
 	nla_put_nested(msg, NL80211_ATTR_SCAN_SSIDS, scan_ssid);
 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, ifindex);
-	
-	
+
+
 	err = -ENOENT;
 	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, callback_trigger, &results);
 	nl_cb_err(cb, NL_CB_CUSTOM, error_handler, &err);
@@ -294,7 +294,7 @@ int nl80211_trigger_scan(struct nl80211_sock *wifi, int ifindex)
 
 	while (err > 0)
 		ret = nl_recvmsgs(wifi->nls, cb);
-	
+
 	if (ret < 0) {
 		log_debug("ERROR: nl_recvmsgs() returned %d (%s).", ret, nl_geterror(-ret));
 		goto nla_put_failure;
@@ -513,7 +513,7 @@ static int callback_dump(struct nl_msg *msg, void *arg)
 
 	if (!bss[NL80211_BSS_BSSID] || !bss[NL80211_BSS_INFORMATION_ELEMENTS])
 		return NL_SKIP;
-	
+
 	/* Add Node */
 	monitor_gluon_node_add(nla_data(bss[NL80211_BSS_BSSID]), nla_data(bss[NL80211_BSS_INFORMATION_ELEMENTS]), nla_len(bss[NL80211_BSS_INFORMATION_ELEMENTS]));
 
