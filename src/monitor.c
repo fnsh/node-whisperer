@@ -83,7 +83,7 @@ static int no_seq_check(struct nl_msg *msg, void *arg)
 	return NL_OK;
 }
 
-int nl80211_socket_free(struct nl80211_sock *sock)
+void nl80211_socket_free(struct nl80211_sock *sock)
 {
 	if (sock->nls)
 		nl_socket_free(sock->nls);
