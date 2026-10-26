@@ -11,7 +11,6 @@
 int ieee80211_information_elements_iterate(uint8_t *ie_buf, size_t ie_buf_len, int (*cb)(uint8_t *ie, size_t ie_len, void *data), void *data) {
 	size_t ie_remaining, ie_len;
 	uint8_t *ie;
-	int ret;
 
 	ie = ie_buf;
 	ie_remaining = ie_buf_len;
