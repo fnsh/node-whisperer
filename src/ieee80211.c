@@ -25,8 +25,8 @@ int ieee80211_information_elements_iterate(uint8_t *ie_buf, size_t ie_buf_len, i
 		ie_len = ie[1];
 
 		log_debug("Process Information Element element=%d length=%d", ie[0], ie_len);
-		if (ie_len > ie_remaining) {
-			log_debug("Invalid Information Element length %d > %d", ie_len, ie_remaining);
+		if (ie_len > ie_remaining - 2) {
+			log_debug("Invalid Information Element length %d > %d", ie_len, ie_remaining - 2);
 			return -1;
 		}
 
