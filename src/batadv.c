@@ -74,10 +74,13 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 	orig = nla_data(attrs[BATADV_ATTR_ORIG_ADDRESS]);
 	dest = nla_data(attrs[BATADV_ATTR_NEIGH_ADDRESS]);
 
+	/* Count each originator once instead of once per neighbor */
+	if (attrs[BATADV_ATTR_FLAG_BEST])
+		opts->stats->originator_count++;
+
 	if (if_indextoname(hardif, ifname) == NULL)
 		return NL_OK;
 
-	opts->stats->originator_count++;
 	if (memcmp(orig, dest, 6) != 0)
 		return NL_OK;
 
