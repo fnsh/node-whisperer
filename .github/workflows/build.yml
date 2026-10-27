@@ -17,9 +17,9 @@ jobs:
           - x86_64
         gluon:
           - ref: v2025.1.x
-            openwrt: "24.10.5"
+            openwrt: "24.10.8"
           - ref: main
-            openwrt: "24.10.5"
+            openwrt: "25.12.6"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/checkout@v7
@@ -43,4 +43,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.arch }}-gluon-${{ matrix.gluon.ref }}-packages
-          path: bin/packages/${{ matrix.arch }}/packages_ci/*.ipk
+          path: |
+            bin/packages/${{ matrix.arch }}/packages_ci/*.ipk
+            bin/packages/${{ matrix.arch }}/packages_ci/*.apk
