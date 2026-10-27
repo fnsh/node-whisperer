@@ -117,6 +117,7 @@ static int nw_daemon_create_vendor_element_buf(struct nw *instance) {
 
 static void nw_daemon_collect_information(struct uloop_timeout *timeout) {
 	struct nw *instance = container_of(timeout, struct nw, update_timeout);
+	char *buf_hex = NULL;
 
 	if (nw_daemon_create_vendor_element_buf(instance) < 0) {
 		goto out_free;
@@ -124,13 +125,13 @@ static void nw_daemon_collect_information(struct uloop_timeout *timeout) {
 
 	/* Allocate output buffer */
 	size_t buf_len = instance->output.len * 2 + 1;
-	uint8_t *buf_hex = malloc(buf_len);
+	buf_hex = malloc(buf_len);
 
 	nw_buffer_to_hexstring(instance->output.buf, instance->output.len, buf_hex);
 
 	/* Update nodes */
 	log_debug("Update %s", buf_hex);
-	nw_interface_update(&instance->ubus_ctx, (char *)buf_hex);
+	nw_interface_update(&instance->ubus_ctx, buf_hex);
 
 	instance->statistics.update_count++;
 

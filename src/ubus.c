@@ -158,8 +158,6 @@ static int nw_ubus_statistics(struct ubus_context *ctx, struct ubus_object *obj,
 			      struct blob_attr *msg)
 {
 	struct nw *nw = container_of(ctx, struct nw, ubus_ctx);
-	struct nw_information_source *source;
-	void *t, *a;
 
 	blob_buf_init(&b, 0);
 

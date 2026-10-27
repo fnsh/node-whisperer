@@ -38,7 +38,7 @@ struct handler_args {
 
 struct gluon_node {
 	uint8_t node_id[6];
-	char *information_elements;
+	uint8_t *information_elements;
 	size_t information_elements_len;
 };
 
@@ -83,7 +83,7 @@ static int no_seq_check(struct nl_msg *msg, void *arg)
 	return NL_OK;
 }
 
-int nl80211_socket_free(struct nl80211_sock *sock)
+void nl80211_socket_free(struct nl80211_sock *sock)
 {
 	if (sock->nls)
 		nl_socket_free(sock->nls);
@@ -187,8 +187,8 @@ int nl_get_multicast_id(struct nl80211_sock *sock, const char *family, const cha
 {
 	struct handler_args grp = { .group = group, .id = -ENOENT, };
 	struct nl_msg *msg;
-	struct nl_cb *cb;
-	int ret, ctrlid;
+	struct nl_cb *cb = NULL;
+	int ret;
 
 	msg = nlmsg_alloc();
 	if (!msg) {
@@ -237,8 +237,8 @@ nla_put_failure:
 int nl80211_trigger_scan(struct nl80211_sock *wifi, int ifindex)
 {
 	struct trigger_results results = {};
-	struct nl_msg *msg, *scan_ssid;
-	struct nl_cb *cb;
+	struct nl_msg *msg = NULL, *scan_ssid = NULL;
+	struct nl_cb *cb = NULL;
 	int ret, err, mcid;
 	mcid = nl_get_multicast_id(wifi, "nl80211", "scan");
 	if (mcid < 0) {
@@ -330,7 +330,6 @@ nla_put_failure:
 static int monitor_gluon_node_parse_tlv_node_id(const uint8_t *tlv, size_t tlv_len, void *data)
 {
 	struct gluon_node *node = data;
-	int ret;
 
 	if (tlv[0] != 0x01) {
 		log_debug("TLV is not a gluon node_id TLV.");
@@ -413,8 +412,8 @@ out_free:
 	return ret;
 }
 
-static int monitor_gluon_node_add(const char *bssid,
-				  const char *information_elements,
+static int monitor_gluon_node_add(const uint8_t *bssid,
+				  const uint8_t *information_elements,
 				  size_t information_elements_len)
 {
 	struct gluon_node *node;
@@ -523,7 +522,6 @@ static int callback_dump(struct nl_msg *msg, void *arg)
 int nl80211_get_scan_results(struct nl80211_sock *wifi, int ifindex)
 {
 	struct nl_msg *msg;
-	struct nl_cb *cb;
 	int ret;
 
 	msg = nlmsg_alloc();
@@ -534,7 +532,6 @@ int nl80211_get_scan_results(struct nl80211_sock *wifi, int ifindex)
 
 	genlmsg_put(msg, 0, 0, wifi->nl80211_id, 0, NLM_F_DUMP, NL80211_CMD_GET_SCAN, 0);
 	nla_put_u32(msg, NL80211_ATTR_IFINDEX, ifindex);
-	int err = 1;
 
 	ret = nl_socket_modify_cb(wifi->nls, NL_CB_VALID, NL_CB_CUSTOM, callback_dump, NULL);
 	if (ret < 0) {
@@ -565,7 +562,6 @@ out_free:
 int monitor_gluon_node_print_elements(const uint8_t *tlv, size_t tlv_len, void *data)
 {
 	struct nw_information_source *information_source;
-	struct gluon_node *node = data;
 	char *ie_hex;
 	int ret;
 	int i;
@@ -607,7 +603,6 @@ int monitor_gluon_node_print_elements(const uint8_t *tlv, size_t tlv_len, void *
 int monitor_print_information(struct scanned_gluon_nodes *nodes)
 {
 	struct gluon_node *node;
-	int ret;
 
 	log_debug("Printing information for %d nodes.", nodes->len);
 
@@ -620,7 +615,7 @@ int monitor_print_information(struct scanned_gluon_nodes *nodes)
 		       node->node_id[3], node->node_id[4], node->node_id[5]);
 
 		/* Print Information Elements */
-		ret = ieee80211_information_elements_iterate(node->information_elements, node->information_elements_len, monitor_gluon_node_print_elements, node);
+		ieee80211_information_elements_iterate(node->information_elements, node->information_elements_len, monitor_gluon_node_print_elements, node);
 
 		/* Print newline */
 		if (i < nodes->len - 1)

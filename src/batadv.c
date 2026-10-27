@@ -48,7 +48,6 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 	struct neigh_netlink_opts *opts;
 	char ifname[IF_NAMESIZE];
 	uint32_t hardif;
-	uint8_t tq;
 	char *orig, *dest;
 
 	opts = batadv_container_of(query_opts, struct neigh_netlink_opts,
