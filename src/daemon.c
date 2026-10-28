@@ -126,6 +126,10 @@ static void nw_daemon_collect_information(struct uloop_timeout *timeout) {
 	/* Allocate output buffer */
 	size_t buf_len = instance->output.len * 2 + 1;
 	buf_hex = malloc(buf_len);
+	if (!buf_hex) {
+		log_error("Failed to allocate memory for vendor element string");
+		goto out_free;
+	}
 
 	nw_buffer_to_hexstring(instance->output.buf, instance->output.len, buf_hex);
 

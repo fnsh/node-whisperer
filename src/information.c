@@ -116,6 +116,10 @@ int node_whisperer_information_uptime_collect(uint8_t *buffer, size_t buffer_siz
 	uint32_t uptime_minutes;
 	int ret;
 
+	if (buffer_size < sizeof(uptime_minutes)) {
+		return -1;
+	}
+
 	ret = sysinfo(&s_info);
 	if (ret) {
 		return -1;

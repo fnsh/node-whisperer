@@ -5,14 +5,21 @@
 #include <string.h> // Add missing import
 
 int nw_read_file(char *path, char **buf, size_t *len) {
+	long size;
 	FILE *f = fopen(path, "rb");
 	if (!f) {
 		return -1;
 	}
 	fseek(f, 0, SEEK_END);
-	*len = ftell(f);
+	size = ftell(f);
+	if (size < 0) {
+		fclose(f);
+		return -1;
+	}
+	*len = size;
 	fseek(f, 0, SEEK_SET);
-	*buf = malloc(*len);
+	/* Terminate the buffer so callers can treat it as a string */
+	*buf = malloc(*len + 1);
 	if (!*buf) {
 		fclose(f);
 		return -1;
@@ -22,6 +29,7 @@ int nw_read_file(char *path, char **buf, size_t *len) {
 		fclose(f);
 		return -1;
 	}
+	(*buf)[*len] = '\0';
 	fclose(f);
 	return 0;
 }
