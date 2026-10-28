@@ -28,8 +28,8 @@ LDFLAGS_json:=$(shell pkg-config --libs json-c)
 LDFLAGS_DAEMON:=-lubox -lubus -lblobmsg_json -lgluonutil -luci $(LDFLAGS_nl) $(LDFLAGS_batadv) $(LDFLAGS_json)
 CFLAGS_DAEMON:=$(CFLAGS_nl) $(CFLAGS_batadv) $(CFLAGS_json)
 
-LDFLAGS_MONITOR:=$(LDFLAGS_genl) -DBUILD_MONITOR
-CFLAGS_MONITOR:=$(CFLAGS_genl)
+LDFLAGS_MONITOR:=$(LDFLAGS_genl)
+CFLAGS_MONITOR:=$(CFLAGS_genl) -DBUILD_MONITOR
 
 all: node-whisperer node-monitor
 
