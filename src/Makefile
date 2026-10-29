@@ -25,8 +25,18 @@ CFLAGS_json:=$(shell pkg-config --cflags json-c)
 LDFLAGS_json:=$(shell pkg-config --libs json-c)
 
 
-LDFLAGS_DAEMON:=-lubox -lubus -lblobmsg_json -lgluonutil -luci $(LDFLAGS_nl) $(LDFLAGS_batadv) $(LDFLAGS_json)
+LDFLAGS_DAEMON:=-lubox -lubus -lblobmsg_json -lgluonutil -luci -lm $(LDFLAGS_nl) $(LDFLAGS_batadv) $(LDFLAGS_json)
 CFLAGS_DAEMON:=$(CFLAGS_nl) $(CFLAGS_batadv) $(CFLAGS_json)
+
+# Gluon releases before v2026.1 lack batadv_genl_get_algo() in libbatadv,
+# so build the bundled copy for them
+HAVE_BATADV_GENL_GET_ALGO:=$(shell echo 'int (*f)(const char *, enum batadv_algo *) = batadv_genl_get_algo;' | \
+	$(CC) $(CFLAGS_DAEMON) $(CFLAGS) -D_GNU_SOURCE -include batadv-genl.h -fsyntax-only -x c - >/dev/null 2>&1 && echo y)
+ifeq ($(HAVE_BATADV_GENL_GET_ALGO),y)
+CFLAGS_DAEMON+=-DHAVE_BATADV_GENL_GET_ALGO
+else
+SRC_BATADV_COMPAT:=batadv-compat.c
+endif
 
 LDFLAGS_MONITOR:=$(LDFLAGS_genl)
 CFLAGS_MONITOR:=$(CFLAGS_genl) -DBUILD_MONITOR
@@ -34,7 +44,7 @@ CFLAGS_MONITOR:=$(CFLAGS_genl) -DBUILD_MONITOR
 all: node-whisperer node-monitor
 
 node-whisperer:
-	$(CC) $(CFLAGS_common) $(CFLAGS_DAEMON) $(CFLAGS) -D_GNU_SOURCE -o node-whisperer daemon.c util.c information.c log.c ubus.c interface.c batadv.c $(LDFLAGS_common) $(LDFLAGS) $(LDFLAGS_DAEMON)
+	$(CC) $(CFLAGS_common) $(CFLAGS_DAEMON) $(CFLAGS) -D_GNU_SOURCE -o node-whisperer daemon.c util.c information.c log.c ubus.c interface.c batadv.c $(SRC_BATADV_COMPAT) $(LDFLAGS_common) $(LDFLAGS) $(LDFLAGS_DAEMON)
 
 node-monitor:
 	$(CC) $(CFLAGS_common) $(CFLAGS_MONITOR) $(CFLAGS) -D_GNU_SOURCE -o node-monitor monitor.c log.c util.c ieee80211.c information.c $(LDFLAGS_common) $(LDFLAGS) $(LDFLAGS_MONITOR)
