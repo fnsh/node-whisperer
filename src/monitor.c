@@ -646,6 +646,10 @@ int main(int argc, char *argv[])
 		log_set_level(LL_DEBUG);
 
 	ifindex = if_nametoindex(argv[1]);
+	if (!ifindex) {
+		log_error("Interface %s not found.", argv[1]);
+		return 1;
+	}
 	log_debug("Interface index: %d", ifindex);
 	ret = nl80211_socket_alloc(&wifi);
 	if (ret) {
