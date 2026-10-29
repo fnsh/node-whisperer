@@ -12,5 +12,6 @@ void log_set_level(enum log_level level);
 void log_use_syslog(int use);
 
 void log_error(const char *fmt, ...);
+void log_warning(const char *fmt, ...);
 void log_info(const char *fmt, ...);
 void log_debug(const char *fmt, ...);

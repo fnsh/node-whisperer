@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -9,6 +10,7 @@
 #include <sys/sysinfo.h>
 
 #include "batadv.h"
+#include "log.h"
 #include "util.h"
 #include "information.h"
 
@@ -40,6 +42,7 @@ int node_whisperer_information_hostname_collect(uint8_t *buffer, size_t buffer_s
 
 	ret = gethostname((char *)buffer, buffer_size);
 	if (ret) {
+		log_warning("gethostname failed: %s", strerror(errno));
 		return ret;
 	}
 
@@ -62,6 +65,7 @@ int node_whisperer_information_node_id_collect(uint8_t *buffer, size_t buffer_si
 	}
 
 	if (node_id_ascii_len < 18) {
+		log_warning("primary_mac too short: %zu bytes", node_id_ascii_len);
 		free(node_id_ascii);
 		return -1;
 	}
@@ -69,6 +73,7 @@ int node_whisperer_information_node_id_collect(uint8_t *buffer, size_t buffer_si
 	ret = nw_parse_mac_address_ascii(node_id_ascii, buffer);
 	free(node_id_ascii);
 	if (ret < 0) {
+		log_warning("Failed to parse primary_mac");
 		return -1;
 	}
 
@@ -86,14 +91,17 @@ int node_whisperer_information_batman_adv_collect(uint8_t *buffer, size_t buffer
 	}
 
 	ret = nw_get_batadv_neighbor_stats(&stats);
-	if (ret)
+	if (ret) {
+		log_warning("Failed to get batman-adv neighbor stats");
 		return -1;
+	}
 
 	ret = nw_get_batadv_clients();
 	if (ret < 0) {
 		num_clients = 0;
 	} else {
 		num_clients = (uint16_t)ret;
+		log_debug("nw_get_batadv_clients() found %d clients", num_clients);
 	}
 
 	buffer[0] = stats.vpn.connected ? 1 : 0;
@@ -141,18 +149,21 @@ int node_whisperer_information_site_code_collect(uint8_t *buffer, size_t buffer_
 
 	site = gluonutil_load_site_config();
 	if (!site) {
+		log_warning("Failed to load site config");
 		ret = -1;
 		goto out_free;
 	}
 
 	site_code_j = json_object_object_get(site, "site_code");
 	if (!site_code_j) {
+		log_warning("site_code not found in site config");
 		ret = -1;
 		goto out_free;
 	}
 
 	site_code = json_object_get_string(site_code_j);
 	if (!site_code) {
+		log_warning("site_code is not a string");
 		ret = -1;
 		goto out_free;
 	}
@@ -179,6 +190,7 @@ int node_whisperer_information_domain_collect(uint8_t *buffer, size_t buffer_siz
 
 	dom = gluonutil_get_domain();
 	if (!dom) {
+		log_warning("Failed to get domain");
 		ret = -1;
 		goto out_free;
 	}
@@ -206,6 +218,7 @@ int node_whisperer_information_system_load_collect(uint8_t *buffer, size_t buffe
 	}
 
 	if (getloadavg(samples, 3) < 3) {
+		log_warning("getloadavg failed");
 		return -1;
 	}
 
@@ -224,6 +237,7 @@ int node_whisperer_information_firmware_version_collect(uint8_t *buffer, size_t 
 	}
 
 	if (firmware_version_len > buffer_size) {
+		log_warning("Firmware version too long: %zu bytes", firmware_version_len);
 		free(firmware_version);
 		return -1;
 	}
