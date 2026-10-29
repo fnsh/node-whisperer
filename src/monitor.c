@@ -395,6 +395,7 @@ static int monitor_gluon_node_parse_ie(const uint8_t *ie, size_t ie_len, void *d
 
 	/* A previous Gluon IE in the same beacon is superseded by this one */
 	free(node->information_elements);
+	memset(node->node_id, 0, sizeof(node->node_id));
 	node->information_elements = malloc(gluon_tlv_len);
 	if (!node->information_elements) {
 		log_error("Failed to allocate memory for gluon IE buffer.");
