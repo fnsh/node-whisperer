@@ -550,7 +550,10 @@ int nl80211_get_scan_results(struct nl80211_sock *wifi, int ifindex)
 	}
 
 	ret = nl_recvmsgs_default(wifi->nls);
-	if (ret < 0) {
+	/* BSS entries are only updated or appended during a dump, so the results are complete */
+	if (ret == -NLE_DUMP_INTR) {
+		log_debug("Scan dump interrupted by a BSS table update, but results are still complete.");
+	} else if (ret < 0) {
 		log_error("nl_recvmsgs_default() returned %d (%s).", ret, nl_geterror(-ret));
 		goto out_free;
 	}
