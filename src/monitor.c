@@ -300,7 +300,7 @@ int nl80211_trigger_scan(struct nl80211_sock *wifi, int ifindex)
 		ret = nl_recvmsgs(wifi->nls, cb);
 
 	if (ret < 0) {
-		log_debug("ERROR: nl_recvmsgs() returned %d (%s).", ret, nl_geterror(-ret));
+		log_error("Failed to trigger scan: %s", nl_geterror(-ret));
 		goto nla_put_failure;
 	}
 
@@ -308,7 +308,7 @@ int nl80211_trigger_scan(struct nl80211_sock *wifi, int ifindex)
 	while (!results.done) {
 		ret = nl_recvmsgs(wifi->nls, cb);
 		if (ret < 0) {
-			log_debug("ERROR: nl_recvmsgs() returned %d (%s).", ret, nl_geterror(-ret));
+			log_error("Failed to wait for scan results: %s", nl_geterror(-ret));
 			goto nla_put_failure;
 		}
 	}
@@ -646,6 +646,10 @@ int main(int argc, char *argv[])
 		log_set_level(LL_DEBUG);
 
 	ifindex = if_nametoindex(argv[1]);
+	if (!ifindex) {
+		log_error("Interface %s not found.", argv[1]);
+		return 1;
+	}
 	log_debug("Interface index: %d", ifindex);
 	ret = nl80211_socket_alloc(&wifi);
 	if (ret) {
@@ -654,7 +658,8 @@ int main(int argc, char *argv[])
 	}
 
 	log_debug("Trigger scan");
-	nl80211_trigger_scan(&wifi, ifindex);
+	if (nl80211_trigger_scan(&wifi, ifindex) < 0)
+		log_info("Printing cached scan results.");
 	log_debug("Get scan results");
 	nl80211_get_scan_results(&wifi, ifindex);
 
