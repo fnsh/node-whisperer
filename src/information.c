@@ -255,19 +255,19 @@ int node_whisperer_information_node_id_parse(const uint8_t *ie_buf, size_t ie_le
 }
 
 int node_whisperer_information_batman_adv_parse(const uint8_t *ie_buf, size_t ie_len) {
-	uint16_t *tmp;
+	uint16_t tmp;
 
 	if (ie_len < 8)
 		return -1;
 
 	printf("VPN connected: %s\n", ie_buf[0] ? "Yes" : "No");
 	printf("VPN-TQ: %d\n", ie_buf[1]);
-	tmp = (uint16_t *)&ie_buf[2];
-	printf("Originator count: %d\n", ntohs(*tmp));
-	tmp = (uint16_t *)&ie_buf[4];
-	printf("Neighbor count: %d\n", ntohs(*tmp));
-	tmp = (uint16_t *)&ie_buf[6];
-	printf("Client count: %d\n", ntohs(*tmp));
+	memcpy(&tmp, &ie_buf[2], sizeof(tmp));
+	printf("Originator count: %d\n", ntohs(tmp));
+	memcpy(&tmp, &ie_buf[4], sizeof(tmp));
+	printf("Neighbor count: %d\n", ntohs(tmp));
+	memcpy(&tmp, &ie_buf[6], sizeof(tmp));
+	printf("Client count: %d\n", ntohs(tmp));
 
 	return 0;
 }
