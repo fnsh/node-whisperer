@@ -8,6 +8,7 @@ static int use_syslog = 0;
 
 static void log_vprintf(enum log_level level, const char *fmt, va_list args) {
 	const char *level_str;
+	va_list args_syslog;
 
 	if (level > log_level) {
 		return;
@@ -33,13 +34,17 @@ static void log_vprintf(enum log_level level, const char *fmt, va_list args) {
 		level_str = "UNKNOWN";
 		break;
 	}
+	/* vfprintf() leaves args indeterminate, keep a copy for vsyslog() */
+	va_copy(args_syslog, args);
+
 	fprintf(stderr, "[%s] ", level_str);
 	vfprintf(stderr, fmt, args);
 	fprintf(stderr, "\n");
 
 	if (use_syslog) {
-		vsyslog(LOG_INFO, fmt, args);
+		vsyslog(LOG_INFO, fmt, args_syslog);
 	}
+	va_end(args_syslog);
 }
 
 void log_set_level(enum log_level level) {
