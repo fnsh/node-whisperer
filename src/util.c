@@ -67,5 +67,6 @@ int nw_buffer_to_hexstring(const uint8_t *buf, size_t len, char *hexstring) {
 	for (size_t i = 0; i < len; i++) {
 		sprintf(&hexstring[i * 2], "%02x", buf[i]);
 	}
+	hexstring[len * 2] = '\0';
 	return 0;
 }
