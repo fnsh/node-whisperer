@@ -64,8 +64,11 @@ int nw_format_mac_address_string(const uint8_t *mac_address, char *mac_address_s
 }
 
 int nw_buffer_to_hexstring(const uint8_t *buf, size_t len, char *hexstring) {
+	static const char digits[] = "0123456789abcdef";
+
 	for (size_t i = 0; i < len; i++) {
-		sprintf(&hexstring[i * 2], "%02x", buf[i]);
+		hexstring[i * 2] = digits[buf[i] >> 4];
+		hexstring[i * 2 + 1] = digits[buf[i] & 0x0f];
 	}
 	hexstring[len * 2] = '\0';
 	return 0;
