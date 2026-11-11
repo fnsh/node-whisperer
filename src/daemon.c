@@ -91,10 +91,12 @@ static int nw_daemon_create_vendor_element_buf(struct nw *instance) {
 				  information_sources[i].type, information_sources[i].name, ret);
 			continue;
 		} else {
-			nw_buffer_to_hexstring(&instance->output.buf[instance->output.len + 2], ret, hexbuf);
 			/* Information available */
-			log_debug("Information available for id=%d name=%s element_length=%d content=%s",
-				  information_sources[i].type, information_sources[i].name, ret, hexbuf);
+			if (log_level_enabled(LL_DEBUG)) {
+				nw_buffer_to_hexstring(&instance->output.buf[instance->output.len + 2], ret, hexbuf);
+				log_debug("Information available for id=%d name=%s element_length=%d content=%s",
+					  information_sources[i].type, information_sources[i].name, ret, hexbuf);
+			}
 		}
 
 		/* Update Length of Field*/
