@@ -443,15 +443,17 @@ static int monitor_gluon_node_add(const uint8_t *bssid,
 	nw_format_mac_address_string(bssid, mac_addr_string);
 
 	/* Print IE buffer */
-	ie_hex = malloc(information_elements_len * 2 + 1);
-	if (!ie_hex) {
-		log_error("Failed to allocate memory for IE buffer.");
-		return -ENOMEM;
-	}
+	if (log_level_enabled(LL_DEBUG)) {
+		ie_hex = malloc(information_elements_len * 2 + 1);
+		if (!ie_hex) {
+			log_error("Failed to allocate memory for IE buffer.");
+			return -ENOMEM;
+		}
 
-	nw_buffer_to_hexstring(information_elements, information_elements_len, ie_hex);
-	log_debug("Processing scan-result bssid=%s ies=%s", mac_addr_string, ie_hex);
-	free(ie_hex);
+		nw_buffer_to_hexstring(information_elements, information_elements_len, ie_hex);
+		log_debug("Processing scan-result bssid=%s ies=%s", mac_addr_string, ie_hex);
+		free(ie_hex);
+	}
 
 	ret = ieee80211_information_elements_validate(information_elements, information_elements_len);
 	if (ret) {
@@ -687,15 +689,17 @@ int monitor_gluon_node_print_elements(const uint8_t *tlv, size_t tlv_len, void *
 	int ret;
 	int i;
 
-	ie_hex = malloc(tlv_len * 2 + 1);
-	if (!ie_hex) {
-		log_error("Failed to allocate memory for IE buffer.");
-		return -ENOMEM;
-	}
+	if (log_level_enabled(LL_DEBUG)) {
+		ie_hex = malloc(tlv_len * 2 + 1);
+		if (!ie_hex) {
+			log_error("Failed to allocate memory for IE buffer.");
+			return -ENOMEM;
+		}
 
-	nw_buffer_to_hexstring(tlv, tlv_len, ie_hex);
-	log_debug("Find parsing method ie=%s len=%d", ie_hex, tlv_len);
-	free(ie_hex);
+		nw_buffer_to_hexstring(tlv, tlv_len, ie_hex);
+		log_debug("Find parsing method ie=%s len=%d", ie_hex, tlv_len);
+		free(ie_hex);
+	}
 
 	/* Get print method for IE */
 	for (i = 0; information_sources[i].name; i++) {
