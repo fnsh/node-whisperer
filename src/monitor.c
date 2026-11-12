@@ -18,6 +18,7 @@
 #include "util.h"
 
 #define MAX_NODES 100
+#define MAX_DUMP_ATTEMPTS 100
 #define HOSTNAME_MAX_LEN
 
 struct nl80211_sock {
@@ -45,6 +46,15 @@ struct gluon_node {
 struct scanned_gluon_nodes {
 	struct gluon_node nodes[MAX_NODES];
 	size_t len;
+};
+
+struct scan_dump {
+	struct nl_msg **msgs;
+	size_t len;
+	size_t size;
+	int interrupted;
+	int done;
+	int error;
 };
 
 extern struct nw_information_source information_sources[];
@@ -493,7 +503,7 @@ out_free:
 	return ret;
 }
 
-static int callback_dump(struct nl_msg *msg, void *arg)
+static void nl80211_parse_scan_result(struct nl_msg *msg)
 {
 	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
 	struct nlattr *tb[NL80211_ATTR_MAX + 1];
@@ -504,32 +514,90 @@ static int callback_dump(struct nl_msg *msg, void *arg)
 		[NL80211_BSS_INFORMATION_ELEMENTS] = { },
 	};
 
-	log_debug("callback_dump() called.");
+	log_debug("nl80211_parse_scan_result() called.");
 
 	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), NULL);
 	if (!tb[NL80211_ATTR_BSS]) {
 		log_error("BSS is missing!");
-		return NL_SKIP;
+		return;
 	}
 
 	if (nla_parse_nested(bss, NL80211_BSS_MAX, tb[NL80211_ATTR_BSS], bss_policy)) {
 		log_error("Failed to parse nested BSS attributes.");
-		return NL_SKIP;
+		return;
 	}
 
 	if (!bss[NL80211_BSS_BSSID] || !bss[NL80211_BSS_INFORMATION_ELEMENTS])
-		return NL_SKIP;
+		return;
 
 	/* Add Node */
 	monitor_gluon_node_add(nla_data(bss[NL80211_BSS_BSSID]), nla_data(bss[NL80211_BSS_INFORMATION_ELEMENTS]), nla_len(bss[NL80211_BSS_INFORMATION_ELEMENTS]));
+}
+
+static int callback_dump_msg_in(struct nl_msg *msg, void *arg)
+{
+	struct scan_dump *dump = arg;
+
+	/* The kernel sets NLM_F_DUMP_INTR if the BSS table changed since the previous part of the dump, so entries can be missing */
+	if (nlmsg_hdr(msg)->nlmsg_flags & NLM_F_DUMP_INTR)
+		dump->interrupted = 1;
+
+	return NL_OK;
+}
+
+static int callback_dump(struct nl_msg *msg, void *arg)
+{
+	struct scan_dump *dump = arg;
+	struct nl_msg **msgs;
+	size_t size;
+
+	if (dump->len == dump->size) {
+		size = dump->size ? dump->size * 2 : 32;
+		msgs = realloc(dump->msgs, size * sizeof(*msgs));
+		if (!msgs) {
+			log_error("Failed to allocate memory for scan results.");
+			dump->error = -ENOMEM;
+			return NL_STOP;
+		}
+		dump->msgs = msgs;
+		dump->size = size;
+	}
+
+	nlmsg_get(msg);
+	dump->msgs[dump->len++] = msg;
 
 	return NL_SKIP;
 }
 
-int nl80211_get_scan_results(struct nl80211_sock *wifi, int ifindex)
+static int callback_dump_finish(struct nl_msg *msg, void *arg)
+{
+	struct scan_dump *dump = arg;
+
+	/* libnl calls this only for an NLMSG_DONE that passed its sequence check */
+	dump->done = 1;
+
+	return NL_SKIP;
+}
+
+static void scan_dump_free(struct scan_dump *dump)
+{
+	size_t i;
+
+	for (i = 0; i < dump->len; i++)
+		nlmsg_free(dump->msgs[i]);
+	free(dump->msgs);
+	dump->msgs = NULL;
+	dump->len = 0;
+	dump->size = 0;
+}
+
+static int nl80211_dump_scan_results(struct nl80211_sock *wifi, int ifindex, struct scan_dump *dump)
 {
 	struct nl_msg *msg;
+	struct nl_cb *cb;
 	int ret;
+
+	memset(dump, 0, sizeof(*dump));
 
 	msg = nlmsg_alloc();
 	if (!msg) {
@@ -540,11 +608,16 @@ int nl80211_get_scan_results(struct nl80211_sock *wifi, int ifindex)
 	genlmsg_put(msg, 0, 0, wifi->nl80211_id, 0, NLM_F_DUMP, NL80211_CMD_GET_SCAN, 0);
 	nla_put_u32(msg, NL80211_ATTR_IFINDEX, ifindex);
 
-	ret = nl_socket_modify_cb(wifi->nls, NL_CB_VALID, NL_CB_CUSTOM, callback_dump, NULL);
-	if (ret < 0) {
-		log_error("nl_socket_modify_cb() returned %d (%s).", ret, nl_geterror(-ret));
+	cb = nl_cb_alloc(NL_CB_DEFAULT);
+	if (!cb) {
+		log_error("Failed to allocate netlink callback.");
+		ret = -ENOMEM;
 		goto out_free;
 	}
+
+	nl_cb_set(cb, NL_CB_MSG_IN, NL_CB_CUSTOM, callback_dump_msg_in, dump);
+	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, callback_dump, dump);
+	nl_cb_set(cb, NL_CB_FINISH, NL_CB_CUSTOM, callback_dump_finish, dump);
 
 	ret = nl_send_auto_complete(wifi->nls, msg);
 	if (ret < 0) {
@@ -552,18 +625,59 @@ int nl80211_get_scan_results(struct nl80211_sock *wifi, int ifindex)
 		goto out_free;
 	}
 
-	ret = nl_recvmsgs_default(wifi->nls);
+	ret = nl_recvmsgs(wifi->nls, cb);
+	if (dump->error) {
+		ret = dump->error;
+		goto out_free;
+	}
+	/* Full libnl also returns -NLE_DUMP_INTR if another error followed an interrupted part, so only accept it after NLMSG_DONE */
+	if (ret == -NLE_DUMP_INTR && dump->done)
+		ret = 0;
 	if (ret < 0) {
-		log_error("nl_recvmsgs_default() returned %d (%s).", ret, nl_geterror(-ret));
+		log_error("nl_recvmsgs() returned %d (%s).", ret, nl_geterror(-ret));
 		goto out_free;
 	}
 
-	log_debug("Scan results received.");
+	ret = 0;
 
 out_free:
+	nl_cb_put(cb);
 	nlmsg_free(msg);
 
-	return 0;
+	return ret;
+}
+
+int nl80211_get_scan_results(struct nl80211_sock *wifi, int ifindex)
+{
+	struct scan_dump dump;
+	int interrupted;
+	int attempt;
+	size_t i;
+	int ret;
+
+	for (attempt = 1; attempt <= MAX_DUMP_ATTEMPTS; attempt++) {
+		ret = nl80211_dump_scan_results(wifi, ifindex, &dump);
+		interrupted = dump.interrupted;
+
+		/* Parse the messages only after receiving them, so the BSS table has less time to change during the dump */
+		/* Keep the nodes of every attempt, because an interrupted or failed dump only lacks entries */
+		for (i = 0; i < dump.len; i++)
+			nl80211_parse_scan_result(dump.msgs[i]);
+		scan_dump_free(&dump);
+
+		if (ret < 0)
+			return ret;
+
+		if (!interrupted) {
+			log_debug("Scan results received.");
+			return 0;
+		}
+
+		log_debug("Scan result dump was interrupted on attempt %d of %d.", attempt, MAX_DUMP_ATTEMPTS);
+	}
+
+	log_error("Scan result dump was interrupted %d times, nodes can be missing.", MAX_DUMP_ATTEMPTS);
+	return -EAGAIN;
 }
 
 int monitor_gluon_node_print_elements(const uint8_t *tlv, size_t tlv_len, void *data)
