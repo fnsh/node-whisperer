@@ -6,11 +6,15 @@
 static enum log_level log_level = LL_INFO;
 static int use_syslog = 0;
 
+bool log_level_enabled(enum log_level level) {
+	return level <= log_level;
+}
+
 static void log_vprintf(enum log_level level, const char *fmt, va_list args) {
 	const char *level_str;
 	va_list args_syslog;
 
-	if (level > log_level) {
+	if (!log_level_enabled(level)) {
 		return;
 	}
 
