@@ -210,8 +210,11 @@ static void nw_register_events(struct ubus_context *ctx)
 	static struct ubus_event_handler handler = {
 		.cb = nw_ubus_event_handler
 	};
+	int ret;
 
-	ubus_register_event_handler(ctx, &handler, "ubus.object.add");
+	ret = ubus_register_event_handler(ctx, &handler, "ubus.object.add");
+	if (ret)
+		log_error("Failed to register ubus event handler: %s", ubus_strerror(ret));
 }
 
 static void nw_ubus_list_cb(struct ubus_context *ctx,
@@ -223,7 +226,15 @@ static void nw_ubus_list_cb(struct ubus_context *ctx,
 
 void nw_ubus_init(struct ubus_context *ctx)
 {
-	ubus_add_object(ctx, &nw_obj);
+	int ret;
+
+	ret = ubus_add_object(ctx, &nw_obj);
+	if (ret)
+		log_error("Failed to register ubus object: %s", ubus_strerror(ret));
+
 	nw_register_events(ctx);
-	ubus_lookup(ctx, "hostapd.*", nw_ubus_list_cb, NULL);
+
+	ret = ubus_lookup(ctx, "hostapd.*", nw_ubus_list_cb, NULL);
+	if (ret)
+		log_warning("Failed to enumerate existing hostapd interfaces: %s", ubus_strerror(ret));
 }
