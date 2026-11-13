@@ -16,8 +16,8 @@ jobs:
           - powerpc_8548
           - x86_64
         gluon:
-          - ref: v2025.1.x
-            openwrt: "24.10.8"
+          - ref: v2026.1.x
+            openwrt: "25.12.6"
           - ref: main
             openwrt: "25.12.6"
     steps:
